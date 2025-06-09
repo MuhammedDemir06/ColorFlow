@@ -13,6 +13,7 @@ public class TileManager : MonoBehaviour
     [SerializeField] private Transform gridParent;
 
     [Header("Test")]
+    public int TotalColors;
     [SerializeField] private Color[] tilesColor;
     [SerializeField] private int[] tilesID;
     private List<Tile> spawnedTiles = new List<Tile>();

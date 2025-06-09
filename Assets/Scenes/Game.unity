@@ -1210,6 +1210,7 @@ MonoBehaviour:
   tilePrefab: {fileID: 3050867710903037818, guid: b4adcf5fa1c28654797e4a4726d3ca9e, type: 3}
   cam: {fileID: 519420032}
   gridParent: {fileID: 1889661885}
+  TotalColors: 3
   tilesColor:
   - {r: 0.9843137, g: 0, b: 0, a: 1}
   - {r: 0.58521426, g: 1, b: 0, a: 1}
@@ -1952,9 +1953,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CanSelect: 0
-  CurrentTile: {fileID: 0}
   CurrentID: 0
-  selectedTiles: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
