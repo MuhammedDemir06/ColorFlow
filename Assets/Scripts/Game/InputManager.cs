@@ -15,10 +15,22 @@ public class InputManager : MonoBehaviour
     private List<Tile> selectedTiles = new List<Tile>();
     private Dictionary<int, List<Tile>> selectedTilesPerID = new Dictionary<int, List<Tile>>();
     private Dictionary<int, Tile> savedLines = new Dictionary<int, Tile>();
+    private Dictionary<int, bool> colorMatched = new Dictionary<int, bool>();
     private LineRenderer colorLine = new LineRenderer();
+    [SerializeField] private List<int> currentTilesID;
     private void Awake()
     {
         Instance = this;
+    }
+    private void Start()
+    {
+        //Test
+        currentTilesID = TileManager.Instance.SetCurrentSavedTilesID();
+
+        for (int i = 0; i < currentTilesID.Count; i++)
+        {
+            colorMatched.Add(currentTilesID[i], false);
+        }
     }
     public void StartTileSelection(Tile newTile)
     {
@@ -34,9 +46,14 @@ public class InputManager : MonoBehaviour
 
                 colorLine = newTile.GetComponent<LineRenderer>();
                 LineDrawer.Instance.AddLine(CurrentID, colorLine);
+
+                ColorCircle.Instance.SetSelectedCircleColor(colorLine.startColor);
             }
             else
             {
+                if (colorMatched.ContainsKey(CurrentID))
+                    colorMatched[CurrentID] = false;
+
                 SetCurrentTileLines(false,false); //HAS LINE
 
                 selectedTilesPerID[CurrentID].Clear();
@@ -45,12 +62,15 @@ public class InputManager : MonoBehaviour
 
                 selectedTiles = selectedTilesPerID[CurrentID];
 
+                ColorCircle.Instance.SetSelectedCircleColor(colorLine.startColor);
+
                 ResetSavedLineTile();
             }
 
             TileSelection(newTile);
 
-            Debug.Log("Tile Selection Started!");
+            //  Debug.Log("Tile Selection Started!");
+            DebugManager.Instance.DebugLog("Tile Selection Started!");
         }
         else
         {
@@ -62,11 +82,14 @@ public class InputManager : MonoBehaviour
                 colorLine = LineDrawer.Instance.GetLine(CurrentID);
                 selectedTiles = selectedTilesPerID[CurrentID];
 
+                ColorCircle.Instance.SetSelectedCircleColor(colorLine.startColor);
+
                 ResetSavedLineTile();
             }
             else
             {
-                Debug.LogWarning("Tile Has No A Color Ball Or Saved Line");
+                // Debug.LogWarning("Tile Has No A Color Ball Or Saved Line");
+                DebugManager.Instance.DebugLogWarning("Tile Has No A Color Ball Or Saved Line");
             }
         }
     }
@@ -87,13 +110,15 @@ public class InputManager : MonoBehaviour
     {
         if (!newTile.IsHaveBall)
             lastPassedTile = newTile;
+
         lastTileID = newTile.TileID;
 
         TryUndo(newTile);
 
         if (newTile.IsHaveBall && newTile.TileID != CurrentID)
         {
-            Debug.LogWarning("Different color touched. Ending line.");
+            //  Debug.LogWarning("Different color touched. Ending line.");
+            DebugManager.Instance.DebugLogWarning("Different color touched. Ending line.");
             EndTileSelection();
             return;
         }
@@ -107,14 +132,23 @@ public class InputManager : MonoBehaviour
         selectedTiles.Add(newTile);
         LineDraw(newTile);
 
-        Debug.Log("Tile Selection Contiunes");
+       // Debug.Log("Tile Selection Contiunes");
+        DebugManager.Instance.DebugLog("Tile Selection Contiunes");
+    }
+    private Tile RemoveSavedTileID(Tile newTile)
+    {
+        if (newTile.SavedTileLineID > 0)
+            newTile.SavedTileLineID = 0;
+
+        return newTile;
     }
     private void RemoveCurrentLine()
     {
         if (selectedTilesPerID.ContainsKey(CurrentID))
-        {
             selectedTilesPerID.Remove(CurrentID);
-        }
+
+        if (savedLines.ContainsKey(CurrentID))
+            savedLines.Remove(CurrentID);
 
         LineDrawer.Instance.LineRemover(CurrentID);
 
@@ -122,7 +156,8 @@ public class InputManager : MonoBehaviour
         selectedTiles.Clear();
         CurrentID = 0;
 
-        Debug.Log("Removed Current Line");
+       // Debug.Log("Removed Current Line");
+        DebugManager.Instance.DebugLog("Removed Current Line");
     }
     public void EndTileSelection()
     {
@@ -136,12 +171,15 @@ public class InputManager : MonoBehaviour
         ColorMatched();
         //Current set Color Lines
         SetCurrentTileLines(true,false);
-        ShowList();
+
+        if (DebugManager.Instance.DebugMode)
+            ShowList();
 
         IsLevelCompleted();
 
         CurrentID = 0;
-        Debug.Log("Tile Selection Ended!");
+        // Debug.Log("Tile Selection Ended!");
+        DebugManager.Instance.DebugLog("Tile Selection Ended!");
     }
     private bool IsLevelCompleted()
     {
@@ -155,12 +193,14 @@ public class InputManager : MonoBehaviour
 
             if (ballCount < 2)
             {
-                Debug.Log($"Line {colorID} not Matched");
+                // Debug.Log($"Line {colorID} not Matched");
+                DebugManager.Instance.DebugLog($"Line {colorID} not Matched");
                 return false;
             }
         }
 
-        Debug.Log("All Lines Matched, Level Finished!");
+        //  Debug.LogError("All Lines Matched, Level Finished!");
+        DebugManager.Instance.DebugLogError("All Lines Matched, Level Finished!");
         return true;
     }
     private void SetCurrentTileLines(bool hasLine, bool isUndo)
@@ -176,30 +216,37 @@ public class InputManager : MonoBehaviour
         else
         {
             foreach (var tile in selectedTiles)
+            {
                 tile.UpdateLineState(hasLine, CurrentID);
+            }
         }
     }
     private bool ColorMatched()
     {
         if (selectedTilesPerID.ContainsKey(CurrentID) && lastTileID == CurrentID)
         {
-            Debug.LogWarning("Color Matched");
+            if (colorMatched.ContainsKey(CurrentID))
+                colorMatched[CurrentID] = true;
+
+            DebugManager.Instance.DebugLog("Color Matched");
             return true;
         }
-        else if (lastTileID == 0)
+        else
         {
             //that means, last Tile dont have a line or ball
             SaveLine();
-            return false;
         }
         return false;
     }
     private void SaveLine()
     {
-        lastPassedTile.SavedTileLineID = CurrentID;
-        savedLines.Add(CurrentID, lastPassedTile);
+        if (lastPassedTile != null)
+            lastPassedTile.SavedTileLineID = CurrentID;
+        if (!savedLines.ContainsKey(CurrentID))
+            savedLines.Add(CurrentID, lastPassedTile);
 
-        Debug.LogWarning("Saved Line");
+       // Debug.LogWarning("Saved Line");
+        DebugManager.Instance.DebugLogWarning("Saved Line");
     }
     private void TryUndo(Tile currentTile)
     {
@@ -215,9 +262,13 @@ public class InputManager : MonoBehaviour
                 SetCurrentTileLines(true, true);
 
                 path.RemoveAt(path.Count - 1);
+
+                RemoveSavedTileID(selectedTiles[selectedTiles.Count - 1]);
+
                 selectedTiles.RemoveAt(selectedTiles.Count - 1);
                 LineDraw(currentTile);
-                Debug.Log("Undo Done");
+                // Debug.Log("Undo Done");
+                DebugManager.Instance.DebugLog("Undo Done");
             }
         }
     }
@@ -229,5 +280,39 @@ public class InputManager : MonoBehaviour
             int count = pair.Value.Count;
             Debug.Log($"ID: {id}, Tile Count: {count}");
         }
+    }
+
+    public List<int> NewTestPath;
+    public void FindLine()
+    {
+        var path = TileManager.Instance.SetPathFind();
+
+        foreach (var kvp in colorMatched)
+        {
+            int colorID = kvp.Key;
+            bool isMatched = kvp.Value;
+
+            if (!isMatched && colorID != 0)
+            {
+                for (int i = 0; i < path.Count; i++)
+                {
+                    if (path[i] == colorID)
+                    {
+                        Debug.Log($"Path index: {i} for ColorID: {colorID}");  // En son burda kaldıkkkkkk
+                    }
+                }
+                break;
+            }
+        }
+
+        DebugManager.Instance.DebugLog("Line Found");
+    }
+    public void ReturnLine()
+    {
+        DebugManager.Instance.DebugLog("Line Returned");
+    }
+    public void RestartGrid()
+    {
+        DebugManager.Instance.DebugLog("Grid Restarted");
     }
 }

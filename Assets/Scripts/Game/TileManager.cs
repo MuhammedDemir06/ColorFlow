@@ -17,6 +17,9 @@ public class TileManager : MonoBehaviour
     [SerializeField] private Color[] tilesColor;
     [SerializeField] private int[] tilesID;
     private List<Tile> spawnedTiles = new List<Tile>();
+    [SerializeField] private List<int> savedWays; //pathFind
+    [SerializeField] private List<int> currentSavedTilesID;
+
     private void Awake()
     {
         Instance = this;
@@ -47,6 +50,8 @@ public class TileManager : MonoBehaviour
     {
         for (int i = 0; i < spawnedTiles.Count; i++)
         {
+            spawnedTiles[i].SavedPathID = savedWays[i];
+
             if (tilesID[i] != 0)
             {
                 var tileColorBall = spawnedTiles[i].transform.Find("Color Ball");
@@ -56,7 +61,16 @@ public class TileManager : MonoBehaviour
                 spawnedTiles[i].TileID = tilesID[i];
                 spawnedTiles[i].IsHaveBall = true;
                 spawnedTiles[i].SetColor(tilesColor[i]);
+                
             }
         }
+    }
+    public List<int> SetCurrentSavedTilesID()
+    {
+        return currentSavedTilesID;
+    }
+    public List<int> SetPathFind()
+    {
+        return savedWays;
     }
 }

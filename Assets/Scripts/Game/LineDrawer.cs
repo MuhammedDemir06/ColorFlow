@@ -26,7 +26,7 @@ public class LineDrawer : MonoBehaviour
         if (selectedTilesPerColor.ContainsKey(currentID))
             selectedTilesPerColor.Remove(currentID);
         else
-            Debug.LogError("Line Not Found");
+            DebugManager.Instance.DebugLogError("Line Not Found");
     }
     public LineRenderer GetLine(int currentID)
     {
