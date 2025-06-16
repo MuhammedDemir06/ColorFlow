@@ -17,7 +17,11 @@ public class InputManager : MonoBehaviour
     private Dictionary<int, Tile> savedLines = new Dictionary<int, Tile>();
     private Dictionary<int, bool> colorMatched = new Dictionary<int, bool>();
     private LineRenderer colorLine = new LineRenderer();
-    [SerializeField] private List<int> currentTilesID;
+
+    private List<int> currentTilesID;
+    private List<Tile> spawnedTiles;
+
+    private List<int> lineOrder = new List<int>();
     private void Awake()
     {
         Instance = this;
@@ -25,6 +29,11 @@ public class InputManager : MonoBehaviour
     private void Start()
     {
         //Test
+        UpdateCurrentTileID();
+    }
+    private void UpdateCurrentTileID()
+    {
+        spawnedTiles = TileManager.Instance.SpawnedTiles();
         currentTilesID = TileManager.Instance.SetCurrentSavedTilesID();
 
         for (int i = 0; i < currentTilesID.Count; i++)
@@ -48,13 +57,22 @@ public class InputManager : MonoBehaviour
                 LineDrawer.Instance.AddLine(CurrentID, colorLine);
 
                 ColorCircle.Instance.SetSelectedCircleColor(colorLine.startColor);
+
+                if (!lineOrder.Contains(CurrentID))
+                    lineOrder.Add(CurrentID);
             }
             else
             {
+                if (lineOrder.Contains(CurrentID))
+                {
+                    lineOrder.Remove(CurrentID);
+                    lineOrder.Add(CurrentID);
+                }
+
                 if (colorMatched.ContainsKey(CurrentID))
                     colorMatched[CurrentID] = false;
 
-                SetCurrentTileLines(false,false); //HAS LINE
+                SetCurrentTileLines(false,false);
 
                 selectedTilesPerID[CurrentID].Clear();
 
@@ -62,7 +80,8 @@ public class InputManager : MonoBehaviour
 
                 selectedTiles = selectedTilesPerID[CurrentID];
 
-                ColorCircle.Instance.SetSelectedCircleColor(colorLine.startColor);
+                if (ColorCircle.Instance.EnableCircle)
+                    ColorCircle.Instance.SetSelectedCircleColor(colorLine.startColor);
 
                 ResetSavedLineTile();
             }
@@ -101,9 +120,8 @@ public class InputManager : MonoBehaviour
             savedLines.Remove(CurrentID);
         }
     }
-    private void LineDraw(Tile newTile)
+    private void LineDraw()
     {
-        colorLine.positionCount = selectedTiles.Count;
         LineDrawer.Instance.UpdateLine(colorLine, selectedTiles);
     }
     public void TileSelection(Tile newTile)
@@ -130,7 +148,7 @@ public class InputManager : MonoBehaviour
             return;
 
         selectedTiles.Add(newTile);
-        LineDraw(newTile);
+        LineDraw();
 
        // Debug.Log("Tile Selection Contiunes");
         DebugManager.Instance.DebugLog("Tile Selection Contiunes");
@@ -144,6 +162,9 @@ public class InputManager : MonoBehaviour
     }
     private void RemoveCurrentLine()
     {
+        if (lineOrder.Contains(CurrentID))
+            lineOrder.Remove(CurrentID);
+
         if (selectedTilesPerID.ContainsKey(CurrentID))
             selectedTilesPerID.Remove(CurrentID);
 
@@ -166,42 +187,22 @@ public class InputManager : MonoBehaviour
         {
             selectedTilesPerID.Remove(CurrentID);
             LineDrawer.Instance.LineRemover(CurrentID);
+
+            if (lineOrder.Contains(CurrentID))
+                lineOrder.Remove(CurrentID);
         }
-        
-        ColorMatched();
+
+        LevelManager.Instance.ColorMatched(lastTileID, lastPassedTile, colorMatched, selectedTilesPerID, savedLines, CurrentID);
         //Current set Color Lines
         SetCurrentTileLines(true,false);
 
         if (DebugManager.Instance.DebugMode)
             ShowList();
 
-        IsLevelCompleted();
+        LevelManager.Instance.IsLevelCompleted(selectedTilesPerID);
 
         CurrentID = 0;
-        // Debug.Log("Tile Selection Ended!");
         DebugManager.Instance.DebugLog("Tile Selection Ended!");
-    }
-    private bool IsLevelCompleted()
-    {
-        for (int colorID = 1; colorID <= TileManager.Instance.TotalColors; colorID++)
-        {
-            if (!selectedTilesPerID.ContainsKey(colorID))
-                return false; 
-
-            var tiles = selectedTilesPerID[colorID];
-            int ballCount = tiles.Count(t => t.IsHaveBall);
-
-            if (ballCount < 2)
-            {
-                // Debug.Log($"Line {colorID} not Matched");
-                DebugManager.Instance.DebugLog($"Line {colorID} not Matched");
-                return false;
-            }
-        }
-
-        //  Debug.LogError("All Lines Matched, Level Finished!");
-        DebugManager.Instance.DebugLogError("All Lines Matched, Level Finished!");
-        return true;
     }
     private void SetCurrentTileLines(bool hasLine, bool isUndo)
     {
@@ -221,33 +222,6 @@ public class InputManager : MonoBehaviour
             }
         }
     }
-    private bool ColorMatched()
-    {
-        if (selectedTilesPerID.ContainsKey(CurrentID) && lastTileID == CurrentID)
-        {
-            if (colorMatched.ContainsKey(CurrentID))
-                colorMatched[CurrentID] = true;
-
-            DebugManager.Instance.DebugLog("Color Matched");
-            return true;
-        }
-        else
-        {
-            //that means, last Tile dont have a line or ball
-            SaveLine();
-        }
-        return false;
-    }
-    private void SaveLine()
-    {
-        if (lastPassedTile != null)
-            lastPassedTile.SavedTileLineID = CurrentID;
-        if (!savedLines.ContainsKey(CurrentID))
-            savedLines.Add(CurrentID, lastPassedTile);
-
-       // Debug.LogWarning("Saved Line");
-        DebugManager.Instance.DebugLogWarning("Saved Line");
-    }
     private void TryUndo(Tile currentTile)
     {
         var path = selectedTilesPerID[CurrentID];
@@ -266,7 +240,7 @@ public class InputManager : MonoBehaviour
                 RemoveSavedTileID(selectedTiles[selectedTiles.Count - 1]);
 
                 selectedTiles.RemoveAt(selectedTiles.Count - 1);
-                LineDraw(currentTile);
+                LineDraw();
                 // Debug.Log("Undo Done");
                 DebugManager.Instance.DebugLog("Undo Done");
             }
@@ -281,10 +255,10 @@ public class InputManager : MonoBehaviour
             Debug.Log($"ID: {id}, Tile Count: {count}");
         }
     }
-
-    public List<int> NewTestPath;
     public void FindLine()
     {
+        selectedTiles.Clear();
+
         var path = TileManager.Instance.SetPathFind();
 
         foreach (var kvp in colorMatched)
@@ -298,9 +272,24 @@ public class InputManager : MonoBehaviour
                 {
                     if (path[i] == colorID)
                     {
-                        Debug.Log($"Path index: {i} for ColorID: {colorID}");  // En son burda kaldıkkkkkk
+                        selectedTiles.Add(spawnedTiles[i]);
+
+                        DebugManager.Instance.DebugLog($"Path index: {i} for ColorID: {colorID}");
                     }
                 }
+
+                CurrentID = colorID;
+
+                if (colorMatched.ContainsKey(CurrentID))
+                    colorMatched[CurrentID] = true;
+
+                colorLine = selectedTiles[0].GetComponent<LineRenderer>();
+                selectedTilesPerID.Add(CurrentID, selectedTiles);
+                LineDrawer.Instance.AddLine(CurrentID, colorLine);
+                SetCurrentTileLines(true, false);
+                LineDraw();
+
+                LevelManager.Instance.IsLevelCompleted(selectedTilesPerID);
                 break;
             }
         }
@@ -309,10 +298,22 @@ public class InputManager : MonoBehaviour
     }
     public void ReturnLine()
     {
-        DebugManager.Instance.DebugLog("Line Returned");
-    }
-    public void RestartGrid()
-    {
-        DebugManager.Instance.DebugLog("Grid Restarted");
+        if (selectedTilesPerID.Count >= 1)
+        {
+            selectedTiles.Clear();
+            CurrentID = lineOrder.Last();
+            lineOrder.Remove(lineOrder.Last());
+
+            SetCurrentTileLines(false, false);
+            LineDrawer.Instance.LineEraser(CurrentID);
+
+            selectedTilesPerID.Remove(CurrentID);
+            LineDrawer.Instance.LineRemover(CurrentID);
+
+            AnimatedMessagePanel.Instance.ShowMessage("Line Returned", false);
+            DebugManager.Instance.DebugLog("Line Returned");
+        }
+        else
+            AnimatedMessagePanel.Instance.ShowMessage("No Line Found", true);
     }
 }

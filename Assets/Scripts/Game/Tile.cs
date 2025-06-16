@@ -10,7 +10,7 @@ public class Tile : MonoBehaviour
     [HideInInspector] public bool HasLine;
     [HideInInspector] public int LineID;
     [Header("Saved Way ID")]
-    public int SavedPathID;
+    [HideInInspector] public int SavedPathID;
 
     public void SetColor(Color newColor)
     {
@@ -21,20 +21,20 @@ public class Tile : MonoBehaviour
     }
     private void OnMouseDown()
     {
-        if (InputManager.Instance.CanSelect || GameUIManager.Instance.GamePaused)
+        if (InputManager.Instance.CanSelect || GameUIManager.Instance.GamePaused ||GameUIManager.Instance.LevelFinished)
             return;
         InputManager.Instance.StartTileSelection(GetComponent<Tile>());
     }
     private void OnMouseEnter()
     {
-        if (!InputManager.Instance.CanSelect || GameUIManager.Instance.GamePaused)
+        if (!InputManager.Instance.CanSelect || GameUIManager.Instance.GamePaused || GameUIManager.Instance.LevelFinished)
             return;
 
         InputManager.Instance.TileSelection(GetComponent<Tile>());
     }
     private void OnMouseUp()
     {
-        if (!InputManager.Instance.CanSelect || GameUIManager.Instance.GamePaused)
+        if (!InputManager.Instance.CanSelect || GameUIManager.Instance.GamePaused || GameUIManager.Instance.LevelFinished)
             return;
         InputManager.Instance.EndTileSelection();
     }

@@ -12,6 +12,8 @@ public class LineDrawer : MonoBehaviour
     }
     public void UpdateLine(LineRenderer colorLine,List<Tile> selectedTiles)
     {
+        colorLine.positionCount = selectedTiles.Count;
+
         for (int i = 0; i < selectedTiles.Count; i++)
         {
             colorLine.SetPosition(i, selectedTiles[i].transform.position);

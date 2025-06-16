@@ -1,6 +1,4 @@
 using DG.Tweening;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class AnimatedPanel : MonoBehaviour
@@ -13,9 +11,9 @@ public class AnimatedPanel : MonoBehaviour
     public Ease openEase = Ease.OutBack;
     public Ease closeEase = Ease.InBack;
 
-    public bool hideOnStart = true;
-
     private Vector3 originalScale;
+
+    public bool HideOnStart = true;
 
     private void Start()
     {
@@ -23,13 +21,12 @@ public class AnimatedPanel : MonoBehaviour
 
         originalScale = targetPanel.localScale;
 
-        if (hideOnStart)
+        if(HideOnStart)
         {
             targetPanel.localScale = Vector3.zero;
             targetPanel.gameObject.SetActive(false);
         }
     }
-
     public void Show()
     {
         if (targetPanel == null) return;
@@ -38,7 +35,6 @@ public class AnimatedPanel : MonoBehaviour
         targetPanel.localScale = Vector3.zero;
         targetPanel.DOScale(originalScale, animationDuration).SetEase(openEase);
     }
-
     public void Hide()
     {
         if (targetPanel == null) return;
