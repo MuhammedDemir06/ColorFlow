@@ -62,7 +62,7 @@ public class TileManager : MonoBehaviour
                 spawnedTiles[i].TileID = tilesID[i];
                 spawnedTiles[i].IsHaveBall = true;
                 spawnedTiles[i].SetColor(tilesColor[i]);
-                
+
             }
         }
     }

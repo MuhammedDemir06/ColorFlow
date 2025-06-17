@@ -28,6 +28,10 @@ public class LevelManager : MonoBehaviour
             }
         }
         GameUIManager.Instance.LevelFinish(true);
+
+        var random = Random.Range(0, popupMessages.Length);
+        PopupText.Instance.ShowPopup(popupMessages[random]);
+
         DebugManager.Instance.DebugLogError("All Lines Matched, Level Finished!");
         return true;
     }
@@ -39,11 +43,8 @@ public class LevelManager : MonoBehaviour
             if (colorMatched.ContainsKey(currentID))
                 colorMatched[currentID] = true;
 
-            GameUIManager.Instance.UpdateMoveCount(1);
-
-            var random = Random.Range(0, popupMessages.Length);
-            PopupText.Instance.ShowPopup(popupMessages[random]);
             DebugManager.Instance.DebugLog("Color Matched");
+            GameUIManager.Instance.UpdateMoveCount(1);
             return true;
         }
         else

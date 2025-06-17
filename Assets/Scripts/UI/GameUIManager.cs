@@ -16,11 +16,12 @@ public class GameUIManager : MonoBehaviour
     [Header("Color Find")]
     [SerializeField] private int findAmount = 100;
     [SerializeField] private TextMeshProUGUI colorFindText;
-    [Header("Circle")]
-    [SerializeField] private Button circleEnableButton;
+    [Header("Color Circle")]
+    [SerializeField] private Image circleButtonImage;
     [SerializeField] private TextMeshProUGUI circleEnableText;
     [SerializeField] private Color greenColor;
     [SerializeField] private Color redColor;
+    private bool isActive;
     [Header("Move Count")]
     [SerializeField] private TextMeshProUGUI moveCountText;
     [SerializeField] private int moveCount;
@@ -30,6 +31,9 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private AnimatedPanel nextLevelPanel;
     [SerializeField]private Image[] starImages;
     [SerializeField] private Sprite whiteStarSprite;
+    [Header("Sound Slider")]
+    [SerializeField] private Slider soundSlider;
+    [SerializeField] private SoundManager soundManager;
     private void Awake()
     {
         Instance = this;
@@ -44,12 +48,22 @@ public class GameUIManager : MonoBehaviour
 
         colorFindText.text = findAmount.ToString();
 
-        UpdateCircleEnable();
+        UpdateCircleEnable(true);
 
-        UpdateCash();
+        SaveCash(true);
     }
-    private void UpdateCash()
+    private void SaveCash(bool isGettingData)
     {
+        if (isGettingData)
+        {
+            currentCash = PlayerDataManager.Instance.LoadData().PlayerCash;
+        }
+        else
+        {
+            PlayerDataManager.Instance.CurrentPlayerData.PlayerCash = currentCash;
+            PlayerDataManager.Instance.SaveData();
+        }
+
         currentCashText.text = currentCash.ToString();
     }
     public void UpdateMoveCount(int amount)
@@ -87,6 +101,13 @@ public class GameUIManager : MonoBehaviour
         }
     }
     //Buttons
+    public void SoundSlider(bool isGettingData)
+    {
+        if (isGettingData)
+            soundManager.GetSoundData(soundSlider);
+        else
+            soundManager.SetSoundData(soundSlider);
+    }
     public void ReturnButton()
     {
         if (LevelFinished)
@@ -102,7 +123,7 @@ public class GameUIManager : MonoBehaviour
         if (currentCash >= findAmount)
         {
             currentCash -= findAmount;
-            UpdateCash();
+            SaveCash(false);
 
             InputManager.Instance.FindLine();
             AnimatedMessagePanel.Instance.ShowMessage("Find Color is Purchased!", false);
@@ -126,33 +147,36 @@ public class GameUIManager : MonoBehaviour
 
         settingsPanel.Show();
     }
-    private void UpdateCircleEnable()
+    private void UpdateCircleEnable(bool isGettingData)
     {
-        if (ColorCircle.Instance.EnableCircle)
+        if (isGettingData)
         {
-            circleEnableButton.GetComponent<Image>().color = greenColor;
-            
-            circleEnableText.text = "Enabled";
-            DebugManager.Instance.DebugLogWarning("Circle Enabled");
+            isActive = PlayerDataManager.Instance.CurrentPlayerData.CircleEnable;
         }
         else
         {
-            circleEnableButton.GetComponent<Image>().color = redColor;
-            circleEnableText.text = "Disabled";
+            PlayerDataManager.Instance.CurrentPlayerData.CircleEnable = isActive;
+        }
+
+        if (isActive)
+        {
+            circleButtonImage.color = greenColor;
+            circleEnableText.text = "Enable";
+        }
+        else
+        {
+            circleButtonImage.color = redColor;
+            circleEnableText.text = "Disable";
         }
     }
     public void CircleEnableButton()
     {
-        ColorCircle.Instance.EnableCircle = !ColorCircle.Instance.EnableCircle;
-        UpdateCircleEnable();
+        isActive = !isActive;
+        ColorCircle.Instance.EnableCircle = isActive;
+        UpdateCircleEnable(false);
     }
     public void NextScene(string sceneName)
     {
         SceneTransitionEffect.Instance.LoadScene(sceneName);
     }
-}
-[System.Serializable]
-public class Star
-{
-    public string[] Subtitles;
 }

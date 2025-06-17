@@ -6,13 +6,16 @@ public class GameManager : MonoBehaviour
     [Space(10)]
     [Header("Message Panel Prefab")]
     [SerializeField] private GameObject canvasPanelPrefab;
-    void Start()
+    private void Start()
     {
         if (AnimatedMessagePanel.Instance == null && SceneTransitionEffect.Instance == null)
         {
             Instantiate(canvasPanelPrefab);
         }
         else
-            DebugManager.Instance.DebugLogError("Instances Not Found");
+        {
+            DebugManager.Instance.DebugLog("Instances Found");
+            Destroy(gameObject);
+        }
     }
 }
