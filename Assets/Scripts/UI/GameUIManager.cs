@@ -10,30 +10,23 @@ public class GameUIManager : MonoBehaviour
     [Header("Game UI Manager")]
     public bool GamePaused = false;
     public bool LevelFinished;
-    [Header("Cash")]
-    [SerializeField] private int currentCash;
-    [SerializeField] private TextMeshProUGUI currentCashText;
     [Header("Color Find")]
     [SerializeField] private int findAmount = 100;
     [SerializeField] private TextMeshProUGUI colorFindText;
-    [Header("Color Circle")]
-    [SerializeField] private Image circleButtonImage;
-    [SerializeField] private TextMeshProUGUI circleEnableText;
-    [SerializeField] private Color greenColor;
-    [SerializeField] private Color redColor;
-    private bool isActive;
     [Header("Move Count")]
     [SerializeField] private TextMeshProUGUI moveCountText;
     [SerializeField] private int moveCount;
     [Header("Settings")]
-    [SerializeField] private AnimatedPanel settingsPanel;
+    [SerializeField] private AnimatedPanel settingsAnimatedPanel;
+    [SerializeField] private SettingsPanel settingsPanel;
     [Header("Level Finish || Next Level")]
-    [SerializeField] private AnimatedPanel nextLevelPanel;
+    [SerializeField] private AnimatedPanel nextLevelAnimatedPanel;
     [SerializeField]private Image[] starImages;
     [SerializeField] private Sprite whiteStarSprite;
-    [Header("Sound Slider")]
-    [SerializeField] private Slider soundSlider;
-    [SerializeField] private SoundManager soundManager;
+    [SerializeField] private int earnedCash;
+    [SerializeField] private TextMeshProUGUI earnedCashText;
+    [Header("Current Level")]
+    [SerializeField] private TextMeshProUGUI desiredLevelText;
     private void Awake()
     {
         Instance = this;
@@ -48,23 +41,7 @@ public class GameUIManager : MonoBehaviour
 
         colorFindText.text = findAmount.ToString();
 
-        UpdateCircleEnable(true);
-
-        SaveCash(true);
-    }
-    private void SaveCash(bool isGettingData)
-    {
-        if (isGettingData)
-        {
-            currentCash = PlayerDataManager.Instance.LoadData().PlayerCash;
-        }
-        else
-        {
-            PlayerDataManager.Instance.CurrentPlayerData.PlayerCash = currentCash;
-            PlayerDataManager.Instance.SaveData();
-        }
-
-        currentCashText.text = currentCash.ToString();
+        desiredLevelText.text = $"Level {PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel}";
     }
     public void UpdateMoveCount(int amount)
     {
@@ -73,18 +50,36 @@ public class GameUIManager : MonoBehaviour
     }
     public void LevelFinish(bool level)
     {
+        if(PlayerDataManager.Instance.CurrentPlayerData.CurrentLevel==PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel)
+        {
+            PlayerDataManager.Instance.CurrentPlayerData.CurrentLevel += 1;
+            PlayerDataManager.Instance.SaveData();
+        }
         LevelFinished = level;
-        nextLevelPanel.Show();
+        nextLevelAnimatedPanel.Show();
 
         var newValue = moveCount - TileManager.Instance.BestMove;
         int whiteStarCount;
 
         if (newValue < 1)
+        {
             whiteStarCount = 3;
+            earnedCash = 50;
+            settingsPanel.SpendCash(earnedCash, true);
+        }
         else if (newValue < 3)
+        {
             whiteStarCount = 2;
+            earnedCash = 25;
+            settingsPanel.SpendCash(earnedCash, true);
+        }
         else
+        {
             whiteStarCount = 1;
+            earnedCash = 10;
+            settingsPanel.SpendCash(earnedCash, true);
+        }
+        earnedCashText.text = $"Earned Cash {earnedCash}";
 
         StartCoroutine(StarCalculate(whiteStarCount));
     }
@@ -101,13 +96,6 @@ public class GameUIManager : MonoBehaviour
         }
     }
     //Buttons
-    public void SoundSlider(bool isGettingData)
-    {
-        if (isGettingData)
-            soundManager.GetSoundData(soundSlider);
-        else
-            soundManager.SetSoundData(soundSlider);
-    }
     public void ReturnButton()
     {
         if (LevelFinished)
@@ -120,10 +108,10 @@ public class GameUIManager : MonoBehaviour
         if (LevelFinished)
             return;
 
-        if (currentCash >= findAmount)
+        if (settingsPanel.CurrentCash >= findAmount)
         {
-            currentCash -= findAmount;
-            SaveCash(false);
+            settingsPanel.CurrentCash -= findAmount;
+            settingsPanel.SaveCash(false);
 
             InputManager.Instance.FindLine();
             AnimatedMessagePanel.Instance.ShowMessage("Find Color is Purchased!", false);
@@ -131,7 +119,7 @@ public class GameUIManager : MonoBehaviour
         }
         else
         {
-            AnimatedMessagePanel.Instance.ShowMessage("Find Color is not Purchased!",true);  //erroPanel
+            AnimatedMessagePanel.Instance.ShowMessage("Find Color is not Purchased!",true);  //error Panel
             DebugManager.Instance.DebugLogWarning("Find Color is not Purchased!");
         }  
     }
@@ -145,38 +133,16 @@ public class GameUIManager : MonoBehaviour
         if (LevelFinished)
             return;
 
-        settingsPanel.Show();
-    }
-    private void UpdateCircleEnable(bool isGettingData)
-    {
-        if (isGettingData)
-        {
-            isActive = PlayerDataManager.Instance.CurrentPlayerData.CircleEnable;
-        }
-        else
-        {
-            PlayerDataManager.Instance.CurrentPlayerData.CircleEnable = isActive;
-        }
-
-        if (isActive)
-        {
-            circleButtonImage.color = greenColor;
-            circleEnableText.text = "Enable";
-        }
-        else
-        {
-            circleButtonImage.color = redColor;
-            circleEnableText.text = "Disable";
-        }
-    }
-    public void CircleEnableButton()
-    {
-        isActive = !isActive;
-        ColorCircle.Instance.EnableCircle = isActive;
-        UpdateCircleEnable(false);
+        settingsAnimatedPanel.Show();
     }
     public void NextScene(string sceneName)
     {
         SceneTransitionEffect.Instance.LoadScene(sceneName);
+    }
+    public void NextLevelButton()
+    {
+        PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel = PlayerDataManager.Instance.CurrentPlayerData.CurrentLevel;
+
+        PlayerDataManager.Instance.SaveData();
     }
 }

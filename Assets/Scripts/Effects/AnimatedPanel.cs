@@ -26,6 +26,10 @@ public class AnimatedPanel : MonoBehaviour
             targetPanel.localScale = Vector3.zero;
             targetPanel.gameObject.SetActive(false);
         }
+        else
+        {
+            targetPanel.gameObject.SetActive(true);
+        }
     }
     public void Show()
     {

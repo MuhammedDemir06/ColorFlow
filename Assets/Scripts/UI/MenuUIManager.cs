@@ -1,99 +1,88 @@
+﻿using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 public class MenuUIManager : MonoBehaviour
 {
     public static MenuUIManager Instance;
-
-    [Header("Player Cash")]
-    [SerializeField] private int currentCash;
-    [SerializeField] private TextMeshProUGUI currentCashText;
-    [Header("Sound Slider")]
-    [SerializeField] private Slider soundSlider;
-    [SerializeField] private SoundManager soundManager;
-    [Header("Color Circle")]
-    [SerializeField] private Image circleButtonImage;
-    [SerializeField] private TextMeshProUGUI circleEnableText;
-    [SerializeField] private Color redColor;
-    [SerializeField] private Color greenColor;
-    private bool isActive;
-    private void Awake()
-    {
-        Instance = this;
-    }
+    [Header("Menu UI Manager")]
+    [Space(20)]
+    [Header("Settings")]
+    [SerializeField] private SettingsPanel settingsPanel;
+    [Header("Levels")]
+    [SerializeField] private GameObject levelButtonPrefab;
+    [SerializeField] private Transform contentParent;
     private void Start()
     {
-        SoundSlider(true);
-        SaveCash(true);
-
-        CircleUpdate(true);
+        LoadLevelButtons();
     }
-    private void SaveCash(bool isGettingData)
+    private void LoadLevelButtons()
     {
-        if(isGettingData)
-        {
-            currentCash = PlayerDataManager.Instance.LoadData().PlayerCash;
-        }
-        else
-        {
-            PlayerDataManager.Instance.CurrentPlayerData.PlayerCash = currentCash;
-            PlayerDataManager.Instance.SaveData();
-        }
+        LevelData[] allLevels = Resources.LoadAll<LevelData>("Levels");
 
-        currentCashText.text = currentCash.ToString();
+        var sortedLevels = allLevels.OrderBy(lv => lv.name).ToArray();
+
+        for (int i = 0; i < sortedLevels.Length; i++)
+        {
+            GameObject btnObj = Instantiate(levelButtonPrefab, contentParent);
+            int levelIndex = i + 1;
+
+            if (i < PlayerDataManager.Instance.CurrentPlayerData.CurrentLevel)
+            {
+                btnObj.GetComponentInChildren<TextMeshProUGUI>().text = levelIndex.ToString();
+
+                int capturedIndex = levelIndex;
+                btnObj.GetComponent<Button>().onClick.AddListener(()=> NewLevelButton(capturedIndex));
+            }
+            else
+            {
+                btnObj.GetComponentInChildren<TextMeshProUGUI>().text = " ";
+
+                Transform lockTransform = btnObj.transform.Find("Lock Icon");
+
+                lockTransform.gameObject.SetActive(true);
+            }
+        }
+        ResizeUI(sortedLevels.Length);
     }
-    private void CircleUpdate(bool isGettingData)
+    private void NewLevelButton(int currentLevel)
     {
-        if (isGettingData)
-        {
-            isActive = PlayerDataManager.Instance.CurrentPlayerData.CircleEnable;
-        }
-        else
-        {
-            PlayerDataManager.Instance.CurrentPlayerData.CircleEnable = isActive;
-        }
+        PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel = currentLevel;
 
-        if (isActive)
+        PlayerDataManager.Instance.SaveData();
+
+        Debug.Log("Saved Scene Name: Level " + currentLevel);
+        SceneTransitionEffect.Instance.LoadScene("Game");
+    }
+    private void ResizeUI(int levelCount)
+    {
+        if(levelCount>30)
         {
-            circleButtonImage.color = greenColor;
-            circleEnableText.text = "Enable";
-        }
-        else
-        {
-            circleButtonImage.color = redColor;
-            circleEnableText.text = "Disable";
+            GridLayoutGroup grid = contentParent.GetComponent<GridLayoutGroup>();
+            RectTransform rt = contentParent.GetComponent<RectTransform>();
+
+            int columns = 4; //How many button in the line
+            int rows = Mathf.CeilToInt(levelCount / (float)columns);
+
+            float width = grid.cellSize.x * columns + grid.spacing.x * (columns - 1);
+            float height = grid.cellSize.y * rows + grid.spacing.y * (rows - 1);
+
+            rt.sizeDelta = new Vector2(width, height);
         }
     }
     //Buttons
-    public void SoundSlider(bool isGettingData)
-    {
-        if (isGettingData)
-            soundManager.GetSoundData(soundSlider);
-        else
-            soundManager.SetSoundData(soundSlider);
-    }
-
-    public void CircleButton()
-    {
-        isActive = !isActive;
-        CircleUpdate(false);
-    }
     public void OpenURLButton(string link)
     {
         Application.OpenURL(link);
     }
     public void StoreButton()
     {
-        currentCash += 100;
-        SaveCash(false);
+        settingsPanel.SpendCash(100, true);
+        settingsPanel.SaveCash(false);
         PopupText.Instance.ShowPopup("Cash Earned");
     }
     public void ExitButton()
     {
         SceneTransitionEffect.Instance.Exit();
-    }
-    public void PlayButton()
-    {
-        SceneTransitionEffect.Instance.LoadScene("Game");
     }
 }

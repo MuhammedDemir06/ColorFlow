@@ -6,9 +6,11 @@ public class PlayerData
     [Header("Game")]
     public int PlayerCash;
     public int CurrentLevel;
+    public int DesiredLevel;
     [Header("Settings")]
     public float GameSound;
     public bool CircleEnable;
+    public bool BackgroundEnable;
 }
 public class PlayerDataManager : MonoBehaviour
 {
@@ -42,9 +44,8 @@ public class PlayerDataManager : MonoBehaviour
         }
         else
         {
-            NewPlayerData();
-            Debug.LogWarning("Data Not Found And New Data Created!");
-            return null;
+            CurrentPlayerData = NewPlayerData();
+            return CurrentPlayerData;
         }
     }
     private PlayerData NewPlayerData()
@@ -53,8 +54,10 @@ public class PlayerDataManager : MonoBehaviour
         {
             PlayerCash = 100,
             CurrentLevel = 1,
+            DesiredLevel = 0,
             CircleEnable = true,
-            GameSound = 40
+            GameSound = 40,
+            BackgroundEnable = true
         };
 
         string json = JsonUtility.ToJson(newPlayerData, true);
@@ -62,12 +65,12 @@ public class PlayerDataManager : MonoBehaviour
 
         return newPlayerData;
     }
-    public void DeleteData()
+    public static void DeleteData()
     {
-        if (File.Exists(filePath))
+        if (File.Exists(Path.Combine(Application.persistentDataPath, "playerData.json")))
         {
-            File.Delete(filePath);
-            Debug.Log("Veri dosyası silindi.");
+            File.Delete(Path.Combine(Application.persistentDataPath, "playerData.json"));
+            Debug.Log("Data Deleted.");
         }
     }
 }

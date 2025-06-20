@@ -18,4 +18,12 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+#if UNITY_EDITOR
+    [UnityEditor.MenuItem("Tools/Delete Game Data")]
+    public static void DeleteGameData()
+    {
+        PlayerDataManager.DeleteData();
+    }
+
+#endif
 }

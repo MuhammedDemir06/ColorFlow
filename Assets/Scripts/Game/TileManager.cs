@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class TileManager : MonoBehaviour
@@ -6,20 +7,19 @@ public class TileManager : MonoBehaviour
     public static TileManager Instance;
 
     [Header("Grid")]
-    [SerializeField] private int gridWidth = 4;
-    [SerializeField] private int gridHeight = 4;
     [SerializeField] private GameObject tilePrefab;
     [SerializeField] private Transform cam;
     [SerializeField] private Transform gridParent;
-
-    [Header("Test")]
+    private int gridWidth = 4;
+    private int gridHeight = 4;
+    private LevelData levelData;
     public int BestMove;
     public int TotalColors;
-    [SerializeField] private Color[] tilesColor;
-    [SerializeField] private int[] tilesID;
+    private List<Color> tilesColor = new List<Color>();
+    private List<int> tilesID = new List<int>();
     private List<Tile> spawnedTiles = new List<Tile>();
-    [SerializeField] private List<int> savedWays; //pathFind
-    [SerializeField] private List<int> currentSavedTilesID;
+    private List<int> savedWays = new List<int>();
+    private List<int> currentSavedTilesID = new List<int>();
 
     private void Awake()
     {
@@ -31,8 +31,28 @@ public class TileManager : MonoBehaviour
     }
     private void Init()
     {
+        GeLevelData();
         TileSpawner();
         SetTiles();
+
+        SavedTiles();
+    }
+    private void GeLevelData()
+    {
+        LevelData[] allLevels = Resources.LoadAll<LevelData>("Levels");
+
+        var sortedLevels = allLevels.OrderBy(lv => lv.name).ToArray();
+        levelData = sortedLevels[PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel];
+
+        //Values
+        gridHeight = levelData.Height;
+        gridWidth = levelData.Width;
+        BestMove = levelData.BestMove;
+        TotalColors = levelData.TotalColors;
+
+        tilesColor = levelData.TilesColor;
+        tilesID = levelData.TilesID;
+        savedWays = levelData.SavedWays;
     }
     private void TileSpawner()
     {
@@ -45,7 +65,22 @@ public class TileManager : MonoBehaviour
                 newTile.transform.SetParent(gridParent);
             }
 
-        cam.position = new Vector3((float)gridWidth / 2 - 0.5f, (float)gridHeight / 2 - 0.5f, -10f);
+        // Kamera pozisyonu
+        float camX = (gridWidth - 1) / 2f;
+        float camY = (gridHeight - 1) / 2f;
+        cam.position = new Vector3(camX, camY, cam.position.z);
+
+        // Kamera zoom ayarı (ortografik varsayılarak)
+        Camera cameraComponent = cam.GetComponent<Camera>();
+
+        if (cameraComponent.orthographic)
+        {
+            float aspect = (float)Screen.width / Screen.height;
+            float verticalSize = gridHeight / 2f + 1f; // +1 bir miktar boşluk için
+            float horizontalSize = (gridWidth / 2f + 1f) / aspect;
+
+            cameraComponent.orthographicSize = Mathf.Max(verticalSize, horizontalSize);
+        }
     }
     private void SetTiles()
     {
@@ -62,7 +97,23 @@ public class TileManager : MonoBehaviour
                 spawnedTiles[i].TileID = tilesID[i];
                 spawnedTiles[i].IsHaveBall = true;
                 spawnedTiles[i].SetColor(tilesColor[i]);
+            }
+        }
+    }
+    private void SavedTiles()
+    {
+        currentSavedTilesID.Clear();
 
+        HashSet<int> addedIDs = new HashSet<int>();
+
+        for (int i = 0; i < tilesID.Count; i++)
+        {
+            int id = tilesID[i];
+
+            if (id != 0 && !addedIDs.Contains(id))
+            {
+                currentSavedTilesID.Add(id);
+                addedIDs.Add(id);
             }
         }
     }
