@@ -24,6 +24,15 @@ public class GameManager : MonoBehaviour
     {
         PlayerDataManager.DeleteData();
     }
-
+    [UnityEditor.MenuItem("Tools/How To Create Level ?")]
+    public static void OperTutorialURL()
+    {
+        Application.OpenURL("https://youtu.be/I5oCB5HNV_4");
+    }
+    [UnityEditor.MenuItem("Tools/Color Flow Gameplay")]
+    public static void OperGameplayURL()
+    {
+        Application.OpenURL("https://youtu.be/DzwLsPh5f04");
+    }
 #endif
 }

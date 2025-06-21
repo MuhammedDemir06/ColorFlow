@@ -50,7 +50,7 @@ public class GameUIManager : MonoBehaviour
     }
     public void LevelFinish(bool level)
     {
-        if(PlayerDataManager.Instance.CurrentPlayerData.CurrentLevel==PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel)
+        if (PlayerDataManager.Instance.CurrentPlayerData.CurrentLevel == PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel)
         {
             PlayerDataManager.Instance.CurrentPlayerData.CurrentLevel += 1;
             PlayerDataManager.Instance.SaveData();
@@ -141,7 +141,7 @@ public class GameUIManager : MonoBehaviour
     }
     public void NextLevelButton()
     {
-        PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel = PlayerDataManager.Instance.CurrentPlayerData.CurrentLevel;
+        PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel += 1;
 
         PlayerDataManager.Instance.SaveData();
     }

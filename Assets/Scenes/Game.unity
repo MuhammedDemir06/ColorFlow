@@ -320,18 +320,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1981414588}
-        m_TargetAssemblyTypeName: GameUIManager, Assembly-CSharp
-        m_MethodName: ReturnButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!1 &25781674
 GameObject:
   m_ObjectHideFlags: 0
@@ -853,18 +841,6 @@ MonoBehaviour:
           m_ObjectArgument: {fileID: 2002799169424439484}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
           m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 1981414588}
-        m_TargetAssemblyTypeName: GameUIManager, Assembly-CSharp
-        m_MethodName: FindButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 100
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -2181,6 +2157,7 @@ MonoBehaviour:
   tilePrefab: {fileID: 3050867710903037818, guid: b4adcf5fa1c28654797e4a4726d3ca9e, type: 3}
   cam: {fileID: 519420032}
   gridParent: {fileID: 1889661885}
+  levelData: {fileID: 0}
   BestMove: 3
   TotalColors: 3
 --- !u!4 &987568565
@@ -4362,6 +4339,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CanSelect: 0
   CurrentID: 0
+  selectedTiles: []
+  lineOrder: 
 --- !u!1 &21270821433919681
 GameObject:
   m_ObjectHideFlags: 0
@@ -8562,7 +8541,7 @@ GameObject:
   - component: {fileID: 6093145056894983022}
   - component: {fileID: 2795671040474791393}
   m_Layer: 5
-  m_Name: CircleEnable Button
+  m_Name: BackgroundEnable Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9015,7 +8994,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Color Circle Enable
+  m_text: Background Enable
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
   m_sharedMaterial: {fileID: 2164040, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
@@ -9042,7 +9021,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 38.1
+  m_fontSize: 37.55
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,7 +21,11 @@ public class MenuUIManager : MonoBehaviour
     {
         LevelData[] allLevels = Resources.LoadAll<LevelData>("Levels");
 
-        var sortedLevels = allLevels.OrderBy(lv => lv.name).ToArray();
+        var sortedLevels = allLevels.OrderBy(lv =>
+        {
+            Match match = Regex.Match(lv.name, @"\d+");
+            return match.Success ? int.Parse(match.Value) : 0;
+        }).ToArray();
 
         for (int i = 0; i < sortedLevels.Length; i++)
         {
@@ -51,7 +56,6 @@ public class MenuUIManager : MonoBehaviour
 
         PlayerDataManager.Instance.SaveData();
 
-        Debug.Log("Saved Scene Name: Level " + currentLevel);
         SceneTransitionEffect.Instance.LoadScene("Game");
     }
     private void ResizeUI(int levelCount)

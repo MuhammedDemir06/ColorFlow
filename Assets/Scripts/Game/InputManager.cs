@@ -294,11 +294,11 @@ public class InputManager : MonoBehaviour
             }
         }
 
-        DebugManager.Instance.DebugLog("Line Found");
+        
     }
     public void ReturnLine()
     {
-        if (selectedTilesPerID.Count >= 1)
+        if (selectedTilesPerID.Count != 0 && lineOrder.Count != 0)
         {
             selectedTiles.Clear();
             CurrentID = lineOrder.Last();
@@ -313,7 +313,9 @@ public class InputManager : MonoBehaviour
             AnimatedMessagePanel.Instance.ShowMessage("Line Returned", false);
             DebugManager.Instance.DebugLog("Line Returned");
         }
+        else if(lineOrder.Count == 0)
+            AnimatedMessagePanel.Instance.ShowMessage("You can only return lines that you have drawn yourself.", true);
         else
-            AnimatedMessagePanel.Instance.ShowMessage("No Line Found", true);
+            AnimatedMessagePanel.Instance.ShowMessage("No Line Found",true);
     }
 }

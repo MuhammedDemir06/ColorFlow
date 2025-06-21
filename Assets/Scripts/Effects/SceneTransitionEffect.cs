@@ -8,14 +8,12 @@ public class SceneTransitionEffect : MonoBehaviour
 
     [SerializeField] private Image fadeImage;
     [SerializeField] private float fadeDuration = 0.5f;
-
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
         }
-
         fadeImage.color = new Color(0, 0, 0, 0);
         fadeImage.gameObject.SetActive(false);
     }
@@ -23,9 +21,9 @@ public class SceneTransitionEffect : MonoBehaviour
     {
         fadeImage.gameObject.SetActive(true);
 
-       fadeImage.DOFade(1f, fadeDuration).WaitForCompletion();
+       fadeImage.DOFade(1f, fadeDuration);
 
-        Invoke(nameof(Exit), fadeDuration);
+        Invoke(nameof(ExitTimer), fadeDuration);
     }
     private void ExitTimer()
     {

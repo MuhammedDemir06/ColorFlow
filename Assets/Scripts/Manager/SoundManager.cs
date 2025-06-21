@@ -11,12 +11,11 @@ public class SoundManager : MonoBehaviour
     public void GetSoundData(Slider newSlider)
     {
         newSlider.value = PlayerDataManager.Instance.LoadData().GameSound;
-        AudioListener.volume = PlayerDataManager.Instance.LoadData().GameSound;
+        AudioListener.volume = PlayerDataManager.Instance.LoadData().GameSound / 100;
     }
     public void SetSoundData(Slider newSlider)
     {
-        float number = newSlider.value / 100;
-        PlayerDataManager.Instance.CurrentPlayerData.GameSound = number;
+        PlayerDataManager.Instance.CurrentPlayerData.GameSound = newSlider.value;
         PlayerDataManager.Instance.SaveData();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class TileManager : MonoBehaviour
@@ -12,7 +13,7 @@ public class TileManager : MonoBehaviour
     [SerializeField] private Transform gridParent;
     private int gridWidth = 4;
     private int gridHeight = 4;
-    private LevelData levelData;
+    [SerializeField] private LevelData levelData;
     public int BestMove;
     public int TotalColors;
     private List<Color> tilesColor = new List<Color>();
@@ -41,7 +42,12 @@ public class TileManager : MonoBehaviour
     {
         LevelData[] allLevels = Resources.LoadAll<LevelData>("Levels");
 
-        var sortedLevels = allLevels.OrderBy(lv => lv.name).ToArray();
+        var sortedLevels = allLevels.OrderBy(lv =>
+        {
+            Match match = Regex.Match(lv.name, @"\d+");
+            return match.Success ? int.Parse(match.Value) : 0;
+        }).ToArray();
+
         levelData = sortedLevels[PlayerDataManager.Instance.CurrentPlayerData.DesiredLevel];
 
         //Values
